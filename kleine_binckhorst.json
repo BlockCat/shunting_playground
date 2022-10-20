@@ -1,0 +1,170 @@
+{
+  "name": "Kleine Binckhorst",
+  "yard": {
+    "types": [
+      "inspectie",
+      "reiniging",
+      "was"
+    ],
+    "rails": [
+      {
+        "name": "906a",
+        "connect_a": {
+          "switch": "963",
+          "to": [
+            "51a", 
+          ]
+        },
+        "connect_b": {
+          "entry": true
+        }
+      }
+    ],
+    "switches": [
+      {
+        "name": "entry_a",
+        "connections": [
+          {
+            "name": "906a",
+            "entry": true
+          }
+        ]
+      },
+      {
+        "name": "963",
+        "connections": [
+          {
+            "name": "906a",
+            "connections": [
+              "906b",
+              "961_963"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "961",
+        "connections": [
+          {
+            "name": "961_963",
+            "connections": [
+              "960_961",
+              "52"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "960",
+        "connections": [
+          {
+            "name": "960_961",
+            "connections": [
+              "959_960",
+              "53"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "959",
+        "connections": [
+          {
+            "name": "959_960",
+            "connections": [
+              "958_959",
+              "54"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "958",
+        "connections": [
+          {
+            "name": "958_959",
+            "connections": [
+              "958_978",
+              "55"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "978",
+        "connections": [
+          {
+            "name": "958_978",
+            "connections": [
+              "977_978",
+              "59"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "977",
+        "connections": [
+          {
+            "name": "977_978",
+            "connections": [
+              "976_977",
+              "56"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "976",
+        "connections": [
+          {
+            "name": "976_977",
+            "connections": [
+              "57",
+              "58"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "979",
+        "connections": [
+          {
+            "name": "59",
+            "connections": [
+              "64",
+              "968_979"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "957",
+        "connections": [
+          {
+            "name": "954_957",
+            "connections": [
+              "53",
+              "54"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "970",
+        "shared": [
+          "971"
+        ],
+        "connections": [
+          {
+            "name": "56",
+            "connections": [
+              "970_972",
+              "971"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
