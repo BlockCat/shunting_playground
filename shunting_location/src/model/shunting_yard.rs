@@ -1,51 +1,52 @@
-use serde::{
-    de::{self, Error},
-    Deserialize,
-};
+use serde::{de, Deserialize};
 use std::time::Duration;
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub struct TrackPartYamlId(usize);
+
 #[derive(Debug, PartialEq, Deserialize)]
-pub struct ShuntingYard {
+pub struct ShuntingYardYaml {
     #[serde(rename = "trackParts")]
     pub track_parts: Vec<TrackPart>,
 
-    facilities: Vec<Facility>,
+    pub facilities: Vec<Facility>,
 
     #[serde(rename = "taskTypes")]
-    task_types: Vec<TaskType>,
+    pub task_types: Vec<TaskType>,
 
     #[serde(rename = "movementConstant")]
-    movement_constant: f32,
+    pub movement_constant: f32,
     #[serde(rename = "movementTrackCoefficient")]
-    movement_track_coefficient: f32,
+    pub movement_track_coefficient: f32,
     #[serde(rename = "movementSwitchCoefficient")]
-    movement_switch_coefficient: f32,
+    pub movement_switch_coefficient: f32,
 
     #[serde(rename = "distanceEntries")]
-    distance_entries: Vec<DistanceEntry>,
+    pub distance_entries: Vec<DistanceEntry>,
 }
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct TrackPart {
-    id: String,
+    #[serde(deserialize_with = "parse_string")]
+    pub id: TrackPartYamlId,
     #[serde(rename = "type")]
-    kind: RailType,
-    #[serde(rename = "aSide")]
-    a_side: Vec<String>,
-    #[serde(rename = "bSide")]
-    b_side: Vec<String>,
-    length: f32,
+    pub kind: RailType,
+    #[serde(rename = "aSide", deserialize_with = "parse_vec_string")]
+    pub a_side: Vec<TrackPartYamlId>,
+    #[serde(rename = "bSide", deserialize_with = "parse_vec_string")]
+    pub b_side: Vec<TrackPartYamlId>,
+    pub length: f32,
     pub name: String,
     #[serde(rename = "sawMovementAllowed")]
-    saw_movement_allowed: bool,
+    pub saw_movement_allowed: bool,
     #[serde(rename = "parkingAllowed")]
-    parking_allowed: bool,
+    pub parking_allowed: bool,
     #[serde(rename = "isElectrified")]
-    is_electrified: bool,
+    pub is_electrified: bool,
     #[serde(rename = "aSideOpen")]
-    a_side_open: bool,
+    pub a_side_open: bool,
     #[serde(rename = "bSideOpen")]
-    b_side_open: bool,
+    pub b_side_open: bool,
 }
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -59,15 +60,15 @@ pub enum RailType {
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Facility {
-    id: String,
+    pub id: String,
     #[serde(rename = "type")]
-    kind: FacilityType,
-    #[serde(rename = "relatedTrackParts")]
-    related_track_parts: Vec<String>,
+    pub kind: FacilityType,
+    #[serde(rename = "relatedTrackParts", deserialize_with = "parse_vec_string")]
+    pub related_track_parts: Vec<TrackPartYamlId>,
     #[serde(rename = "taskTypes")]
-    task_types: Vec<TaskType>,
+    pub task_types: Vec<TaskType>,
     #[serde(rename = "simultaneousUsageCount")]
-    capacity: usize,
+    pub capacity: usize,
 }
 #[derive(Debug, PartialEq, Deserialize)]
 pub enum FacilityType {
@@ -98,4 +99,31 @@ where
     D: de::Deserializer<'de>,
 {
     f32::deserialize(deserializer).map(Duration::from_secs_f32)
+}
+
+fn parse_string<'de, D>(deserializer: D) -> Result<TrackPartYamlId, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
+
+    value
+        .parse()
+        .map_err(|_| {
+            de::Error::invalid_value(de::Unexpected::Str(&value), &"String parseable to number")
+        })
+        .map(|x| TrackPartYamlId(x))
+}
+
+fn parse_vec_string<'de, D>(deserializer: D) -> Result<Vec<TrackPartYamlId>, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    let value: Vec<String> = Vec::deserialize(deserializer)?;
+    value
+        .iter()
+        .map(|value| value.parse::<usize>())
+        .map(|value| value.map(|v| TrackPartYamlId(v)))
+        .try_collect::<Vec<_>>()
+        .map_err(|e| de::Error::custom(e))
 }

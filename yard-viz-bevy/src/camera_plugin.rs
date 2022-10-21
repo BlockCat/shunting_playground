@@ -16,4 +16,6 @@ fn init_camera(mut commands: Commands) {
     });
 }
 
-fn camera_controls() {}
+fn camera_controls() {
+    
+}

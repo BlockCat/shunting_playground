@@ -8,21 +8,21 @@ Provides a basic system for:
 - solution evaluation strategy
     - and basic evaluation
 
-- ]
 
+## Events:
 
-Train arrived
-Train departed
-Train moved
-Train washed
-Train inspected
-Train cleaned
+- Train arrived
+- Train departed
+- Train moved
+- Train washed
+- Train inspected
+- Train cleaned
 
-Train arrived wrongly
-Train arrived too late
-Train arrived too early
-Train not arrived
-Train unplanned arrival
+- Train arrived wrongly
+- Train arrived too late
+- Train arrived too early
+- Train not arrived
+- Train unplanned arrival
 
 
 Shunting layout is a graph

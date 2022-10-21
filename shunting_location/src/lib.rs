@@ -1,8 +1,11 @@
+#![feature(iterator_try_collect)]
+
 use easy_error::{Error, ResultExt};
 use model::locations::ShuntingLocations;
 use std::io::Read;
 
-pub mod model;
+pub(crate) mod model;
+mod shunting_yard;
 
 pub use model::locations::*;
 
