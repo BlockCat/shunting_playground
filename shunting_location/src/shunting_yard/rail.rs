@@ -13,7 +13,7 @@ pub enum ShuntingRail {
     Bumper {
         id: String,        
     },
-    Entry {
-        id: String
-    }
+    // Entry {
+    //     id: String
+    // }
 }
