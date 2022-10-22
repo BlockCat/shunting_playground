@@ -10,5 +10,9 @@ serde = {version = "1", features = ["derive"]}
 serde_yaml = "0.9.13"
 shunting_location = {path = "../shunting_location"}
 
-bevy = { version = "0.8" }
+bevy = {version = "0.8"}
+bevy-inspector-egui = "0.13.0"
+bevy_egui = "0.16.1"
+bevy_mod_picking = "0.9.0"
+bevy_pancam = {version = "0.6.1", features = ["bevy_egui"]}
 bevy_prototype_lyon = "0.6"

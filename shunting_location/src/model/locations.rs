@@ -1,6 +1,11 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    ops::{Index, IndexMut},
+};
 
 use serde::Deserialize;
+
+use super::shunting_yard::TrackPart;
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct LocationCoord {
@@ -12,3 +17,19 @@ pub struct LocationCoord {
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct ShuntingLocations(pub HashMap<String, Vec<LocationCoord>>);
+
+impl Index<&TrackPart> for ShuntingLocations {
+    type Output = Vec<LocationCoord>;
+
+    fn index(&self, index: &TrackPart) -> &Self::Output {
+        &self.0[&index.name]
+    }
+}
+
+impl Index<String> for ShuntingLocations {
+    type Output = Vec<LocationCoord>;
+
+    fn index(&self, index: String) -> &Self::Output {
+        &self.0[&index]
+    }
+}

@@ -1,7 +1,3 @@
-pub(crate) mod facility;
-pub(crate) mod rail;
-pub(crate) mod switch;
-
 use self::{
     facility::{Facility, FacilityId},
     rail::ShuntingRail,
@@ -9,11 +5,14 @@ use self::{
 };
 use crate::model::{
     read_yard,
-    shunting_yard::{RailType, ShuntingYardYaml, TrackPartYamlId},
+    shunting_yard::{ShuntingYardYaml, TrackPart, TrackPartYamlId},
 };
 use petgraph::{stable_graph::NodeIndex, Graph};
 use std::{collections::HashMap, io::Read, ops::Index};
 
+pub(crate) mod facility;
+pub(crate) mod rail;
+pub(crate) mod switch;
 ///
 /// Shunting yard can be defined as a graph.
 /// In this case, a rail is defined as two nodes in our network and a switch is an edge.
@@ -25,6 +24,12 @@ use std::{collections::HashMap, io::Read, ops::Index};
 pub struct ShuntingYard {
     pub graph: Graph<ShuntingRail, ShuntingSwitch>,
     pub facilities: Vec<Facility>,
+
+    pub track_parts: Vec<TrackPart>,
+
+    pub movement_constant: f32,
+    pub movement_track_coefficient: f32,
+    pub movement_switch_coefficient: f32,
 }
 
 impl ShuntingYard {
@@ -50,19 +55,28 @@ impl From<ShuntingYardYaml> for ShuntingYard {
             .map(|facility| (facility.name.clone(), facility.id))
             .collect::<HashMap<_, _>>();
 
-        let mut graph = petgraph::Graph::new();
+        let (graph2, _) = build_intermediate_graph(&yard);
 
-        let node_map = create_rail_nodes(&yard, &mut graph)
-            .into_iter()
-            .map(|x| (x.yaml_id, x))
-            .collect::<HashMap<_, _>>();
+        let mut graph = graph2.map(
+            |_, (tp, _)| ShuntingRail {
+                id: tp.name.clone(),
+                length: tp.length,
+                saw_movement_allowed: tp.saw_movement_allowed,
+                parking_allowed: tp.parking_allowed,
+                facilities: connected_facilities(&facility_map, &yard, tp),
+            },
+            |_, e| e.clone(),
+        );
 
-        // connect all sideA to sideB
-        connect_switches(&yard, &mut graph, &node_map);
-        // connect_bumpers(&yard, &mut graph, &node_map);
-        connect_intersections(&yard, &mut graph);
-
-        Self { facilities, graph }
+        graph.shrink_to_fit();
+        Self {
+            facilities,
+            graph,
+            movement_constant: yard.movement_constant,
+            movement_switch_coefficient: yard.movement_switch_coefficient,
+            movement_track_coefficient: yard.movement_track_coefficient,
+            track_parts: yard.track_parts,
+        }
     }
 }
 
@@ -79,91 +93,95 @@ fn load_facilities(yard: &ShuntingYardYaml) -> Vec<Facility> {
         .collect::<Vec<_>>()
 }
 
-fn create_rail_nodes(
+fn connected_facilities(
+    map: &HashMap<String, FacilityId>,
     yard: &ShuntingYardYaml,
-    graph: &mut Graph<ShuntingRail, ShuntingSwitch>,
-) -> Vec<RailNodeEntry> {
-    yard.track_parts
+    tp: &TrackPart,
+) -> Vec<FacilityId> {
+    yard.facilities
         .iter()
-        .filter(|x| x.kind == RailType::RailRoad)
-        .map(|part| {
-            let track = ShuntingRail::Rail {
-                id: part.name.clone(),
-                facilities: Default::default(),
-                length: part.length,
-                parking_allowed: part.parking_allowed,
-                saw_movement_allowed: part.saw_movement_allowed,
-            };
-
-            let switch = ShuntingSwitch::Rotation;
-
-            let side_a = graph.add_node(track.clone());
-            let side_b = graph.add_node(track);
-
-            if part.saw_movement_allowed {
-                graph.add_edge(side_a, side_b, switch.clone());
-                graph.add_edge(side_b, side_a, switch);
-            }
-
-            RailNodeEntry {
-                yaml_id: part.id,
-                side_a,
-                side_b,
-                side_a_connections: part.a_side.clone(),
-                side_b_connections: part.b_side.clone(),
-                bumper: false,
-            }
-        })
+        .filter(|facility| facility.related_track_parts.contains(&tp.id))
+        .map(|facility| map[&facility.id])
         .collect()
 }
 
-fn connect_switches(
+fn build_intermediate_graph(
     yard: &ShuntingYardYaml,
-    graph: &mut Graph<ShuntingRail, ShuntingSwitch>,
-    map: &HashMap<TrackPartYamlId, RailNodeEntry>,
+) -> (
+    Graph<(&TrackPart, RailDirection), ShuntingSwitch>,
+    HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
 ) {
-    let switches = yard
+    let trackpart_map = yard
         .track_parts
         .iter()
-        .filter(|x| x.kind == RailType::Switch || x.kind == RailType::EnglishSwitch);
+        .map(|x| (x.id, x))
+        .collect::<HashMap<_, _>>();
+    let mut graph = petgraph::Graph::new();
+    let nodes = yard
+        .track_parts
+        .iter()
+        .map(|x| {
+            let sidea = graph.add_node((x, RailDirection::SideA));
+            let sideb = graph.add_node((x, RailDirection::SideB));
 
-    for switch in switches {
-        for a in &switch.a_side {
-            for b in &switch.b_side {
-                // connect a[node][forward] -> b[node][forward]
-                // connect b[node][backward] -> a[node][backward]
-                let node_a = map.get(a);
-                let node_b = map.get(b);
+            (x.id, (sidea, sideb))
+        })
+        .collect::<HashMap<_, _>>();
 
-                unimplemented!("We are going to be needing some handshake implementation: If you have me, and i have you.")
-
-                match (node_a, node_b) {
-                    (Some(node_a), Some(node_b)) => {
-                        if node_a.bumper || node_b.bumper {
-                            graph.add_edge(node_b.side_b, node_a.side_a, ShuntingSwitch::Bumper);
-                            graph.add_edge(node_a.side_b, node_b.side_a, ShuntingSwitch::Bumper);
-                        } else {
-                            graph.add_edge(node_b.side_b, node_a.side_b, ShuntingSwitch::Switch);
-                            graph.add_edge(node_a.side_a, node_b.side_a, ShuntingSwitch::Switch);
-                        }
-                    }
-                    _ => {}
-                }
-            }
+    for (side_a, side_b) in nodes.values() {
+        let part = graph[*side_a].0;
+        if part.saw_movement_allowed {
+            graph.add_edge(*side_a, *side_b, ShuntingSwitch::Rotation);
+            graph.add_edge(*side_b, *side_a, ShuntingSwitch::Rotation);
         }
+
+        for a_connection in &part.a_side {
+            add_connection(
+                &trackpart_map,
+                a_connection,
+                &nodes,
+                part,
+                &mut graph,
+                side_a,
+            );
+        }
+
+        for b_connection in &part.b_side {
+            add_connection(
+                &trackpart_map,
+                b_connection,
+                &nodes,
+                part,
+                &mut graph,
+                side_b,
+            );
+        }
+    }
+
+    (graph, nodes)
+}
+
+fn add_connection(
+    trackpart_map: &HashMap<TrackPartYamlId, &TrackPart>,
+    other_id: &TrackPartYamlId,
+    nodes: &HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
+    part: &TrackPart,
+    graph: &mut Graph<(&TrackPart, RailDirection), ShuntingSwitch>,
+    node_index: &NodeIndex,
+) {
+    let other_part = trackpart_map[other_id];
+    let other_nodes = nodes[other_id];
+    if other_part.a_side.contains(&part.id) {
+        graph.add_edge(*node_index, other_nodes.1, ShuntingSwitch::Switch);
+    } else if other_part.b_side.contains(&part.id) {
+        graph.add_edge(*node_index, other_nodes.0, ShuntingSwitch::Switch);
+    } else {
+        unreachable!()
     }
 }
 
-fn connect_intersections(yard: &ShuntingYardYaml, graph: &mut Graph<ShuntingRail, ShuntingSwitch>) {
-    // todo!();
-}
-
 #[derive(Debug)]
-struct RailNodeEntry {
-    yaml_id: TrackPartYamlId,
-    side_a: NodeIndex,
-    side_a_connections: Vec<TrackPartYamlId>,
-    side_b: NodeIndex,
-    side_b_connections: Vec<TrackPartYamlId>,
-    bumper: bool,
+enum RailDirection {
+    SideA,
+    SideB,
 }

@@ -10,7 +10,7 @@ fn main() {
 
     let paths = petgraph::algo::all_simple_paths::<Vec<_>, _>(
         &graph,
-        petgraph::stable_graph::NodeIndex::new(30),
+        petgraph::stable_graph::NodeIndex::new(31),
         petgraph::stable_graph::NodeIndex::new(25),
         0,
         None,

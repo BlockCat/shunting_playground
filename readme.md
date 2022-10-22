@@ -35,3 +35,6 @@ Shunting yard:
 - rails(park, access)
 - switches
 - workstations(clean, inspect, wash)
+
+
+At some facilities, the train needs to leave immediately after done.

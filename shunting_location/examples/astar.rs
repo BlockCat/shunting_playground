@@ -11,14 +11,17 @@ fn main() {
 
     let l = petgraph::algo::astar(
         &graph,
-        petgraph::stable_graph::NodeIndex::new(30),
+        petgraph::stable_graph::NodeIndex::new(31),
         |d| d == petgraph::stable_graph::NodeIndex::new(25),
-        |f| match f.weight() {
-            ShuntingSwitch::Rotation => 30,
-            ShuntingSwitch::Switch => 60,
-            _ => unreachable!(),
+        |f| {
+            println!("S: {:?}", f);
+            match f.weight() {
+                ShuntingSwitch::Rotation => 30.0f32,
+                ShuntingSwitch::Switch => yard.movement_switch_coefficient,
+                _ => unreachable!(),
+            }
         },
-        |f| 1,
+        |f| 1.0,
     );
 
     if let Some((weight, path)) = l {
@@ -26,5 +29,7 @@ fn main() {
         for node in path {
             println!("{:?}", graph[node]);
         }
+    } else {
+        unreachable!();
     }
 }

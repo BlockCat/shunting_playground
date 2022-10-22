@@ -25,7 +25,7 @@ pub struct ShuntingYardYaml {
     pub distance_entries: Vec<DistanceEntry>,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct TrackPart {
     #[serde(deserialize_with = "parse_string")]
     pub id: TrackPartYamlId,
@@ -49,7 +49,7 @@ pub struct TrackPart {
     pub b_side_open: bool,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub enum RailType {
     RailRoad,
     Bumper,
@@ -58,7 +58,7 @@ pub enum RailType {
     EnglishSwitch,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub struct Facility {
     pub id: String,
     #[serde(rename = "type")]
@@ -70,7 +70,7 @@ pub struct Facility {
     #[serde(rename = "simultaneousUsageCount")]
     pub capacity: usize,
 }
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub enum FacilityType {
     ElevatedPlatform,
     Pit,
@@ -79,7 +79,7 @@ pub enum FacilityType {
     Unknown,
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
 pub struct TaskType {
     other: String,
 }

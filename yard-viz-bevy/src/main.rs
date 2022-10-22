@@ -1,46 +1,45 @@
+use std::time::{Duration, Instant, SystemTime};
+
 use bevy::prelude::*;
+use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_prototype_lyon::prelude::*;
 use camera_plugin::CameraPlugin;
-use shunting_location::model::{locations::ShuntingLocations, read_yard};
-use std::io::Cursor;
-
+use rail_view::RailViewPlugin;
 mod camera_plugin;
+mod rail_view;
 mod yard_plugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(yard_plugin::YardDrawingPlugin)
+        .add_plugins(DefaultPickingPlugins)
+        .add_plugin(EguiPlugin)
         .add_plugin(ShapePlugin)
         .add_plugin(CameraPlugin)
-        .add_startup_system(init_shunting_yard)
+        .add_plugin(RailViewPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
+        .add_system(ui_example)
         .run();
 }
 
-fn init_shunting_yard(mut commands: Commands) {
-    let locations = Cursor::new(include_str!(
-        "../../data/Kleine_Binckhorst.location.coords.yaml"
-    ));
-    let locations: ShuntingLocations =
-        shunting_location::read_locations(locations).expect("Could not parse");
-
-    let location = Cursor::new(include_str!("../../data/location.json"));
-    let yard = read_yard(location).expect("Could not read yard");
-
-    for part in &yard.track_parts {
-        let name = &part.name;
-        let line = &locations.0[name];
-
-        for w in line.windows(2) {
-            let line = shapes::Line(Vec2::new(w[0].x, w[0].y), Vec2::new(w[1].x, w[1].y));
-            commands.spawn_bundle(GeometryBuilder::build_as(
-                &line,
-                DrawMode::Stroke(StrokeMode::new(Color::BLACK, 0.3)),
-                Transform::default(),
-            ));
-        }
-    }
-
-    commands.insert_resource(locations);
-    commands.insert_resource(yard);
+fn ui_example(mut egui_context: ResMut<EguiContext>) {
+    egui::Window::new("Time")
+        .default_width(5000.0)
+        .min_width(5000.0)
+        .show(egui_context.ctx_mut(), |ui| {
+            ui.add(
+                egui::Slider::new(&mut 0u64, 0..=24 * 60 * 60u64).custom_formatter(|d: f64, _| {
+                    let duration = Duration::from_secs(d as u64);
+                    format!(
+                        "{}:{}:{}",
+                        duration.as_secs() / 3600,
+                        (duration.as_secs() % 3600) / 60,
+                        duration.as_secs() % 60
+                    )
+                }),
+            );
+        });
 }
