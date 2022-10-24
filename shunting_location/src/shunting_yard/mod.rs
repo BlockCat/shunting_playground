@@ -7,12 +7,18 @@ use crate::model::{
     read_yard,
     shunting_yard::{ShuntingYardYaml, TrackPart, TrackPartYamlId},
 };
-use petgraph::{stable_graph::NodeIndex, Graph};
+use petgraph::{stable_graph::NodeIndex, Directed, Graph};
 use std::{collections::HashMap, io::Read, ops::Index};
 
 pub(crate) mod facility;
 pub(crate) mod rail;
 pub(crate) mod switch;
+
+pub type YardGraphIndex = u32;
+pub type YardGraph = Graph<ShuntingRail, ShuntingSwitch, Directed, YardGraphIndex>;
+
+type IntermediateGraph<'a> =
+    Graph<(&'a TrackPart, RailDirection), ShuntingSwitch, Directed, YardGraphIndex>;
 ///
 /// Shunting yard can be defined as a graph.
 /// In this case, a rail is defined as two nodes in our network and a switch is an edge.
@@ -22,11 +28,10 @@ pub(crate) mod switch;
 /// - node for other way
 ///
 pub struct ShuntingYard {
-    pub graph: Graph<ShuntingRail, ShuntingSwitch>,
+    pub graph: YardGraph,
     pub facilities: Vec<Facility>,
 
-    pub track_parts: Vec<TrackPart>,
-
+    // pub track_parts: Vec<TrackPart>,
     pub movement_constant: f32,
     pub movement_track_coefficient: f32,
     pub movement_switch_coefficient: f32,
@@ -57,13 +62,14 @@ impl From<ShuntingYardYaml> for ShuntingYard {
 
         let (graph2, _) = build_intermediate_graph(&yard);
 
-        let mut graph = graph2.map(
+        let mut graph: YardGraph = graph2.map(
             |_, (tp, _)| ShuntingRail {
                 id: tp.name.clone(),
                 length: tp.length,
                 saw_movement_allowed: tp.saw_movement_allowed,
                 parking_allowed: tp.parking_allowed,
                 facilities: connected_facilities(&facility_map, &yard, tp),
+                track_part: (*tp).clone(),
             },
             |_, e| e.clone(),
         );
@@ -75,7 +81,6 @@ impl From<ShuntingYardYaml> for ShuntingYard {
             movement_constant: yard.movement_constant,
             movement_switch_coefficient: yard.movement_switch_coefficient,
             movement_track_coefficient: yard.movement_track_coefficient,
-            track_parts: yard.track_parts,
         }
     }
 }
@@ -108,7 +113,7 @@ fn connected_facilities(
 fn build_intermediate_graph(
     yard: &ShuntingYardYaml,
 ) -> (
-    Graph<(&TrackPart, RailDirection), ShuntingSwitch>,
+    IntermediateGraph,
     HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
 ) {
     let trackpart_map = yard
@@ -116,7 +121,7 @@ fn build_intermediate_graph(
         .iter()
         .map(|x| (x.id, x))
         .collect::<HashMap<_, _>>();
-    let mut graph = petgraph::Graph::new();
+    let mut graph: IntermediateGraph = IntermediateGraph::new();
     let nodes = yard
         .track_parts
         .iter()
@@ -166,7 +171,7 @@ fn add_connection(
     other_id: &TrackPartYamlId,
     nodes: &HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
     part: &TrackPart,
-    graph: &mut Graph<(&TrackPart, RailDirection), ShuntingSwitch>,
+    graph: &mut IntermediateGraph,
     node_index: &NodeIndex,
 ) {
     let other_part = trackpart_map[other_id];

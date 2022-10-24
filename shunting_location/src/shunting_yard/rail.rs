@@ -1,3 +1,5 @@
+use crate::TrackPart;
+
 use super::facility::FacilityId;
 
 #[derive(Debug, Clone)]
@@ -8,4 +10,5 @@ pub struct ShuntingRail {
     pub saw_movement_allowed: bool,
     pub parking_allowed: bool,
     pub facilities: Vec<FacilityId>,
+    pub track_part: TrackPart,
 }

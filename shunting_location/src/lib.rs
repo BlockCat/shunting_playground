@@ -6,8 +6,14 @@ use std::io::Read;
 
 pub use model::locations::LocationCoord;
 pub use model::locations::ShuntingLocations;
-pub use model::shunting_yard::{DistanceEntry, Facility, RailType, TrackPart};
-pub use shunting_yard::{rail::ShuntingRail, switch::ShuntingSwitch, ShuntingYard};
+pub use model::shunting_yard::{DistanceEntry, RailType, TrackPart};
+pub use shunting_yard::{
+    facility::{Facility, FacilityId},
+    rail::ShuntingRail,
+    switch::ShuntingSwitch,
+    ShuntingYard, YardGraph, YardGraphIndex,
+};
+
 pub(crate) mod model;
 mod shunting_yard;
 
