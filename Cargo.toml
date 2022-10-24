@@ -1,12 +1,12 @@
 [package]
+edition = "2021"
 name = "shunting-playground"
 version = "0.1.0"
-edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-petgraph = {version = "0.6", features = ["serde-1"] }
+petgraph = {version = "0.6", features = ["serde-1"]}
 
 [workspace]
-members = ["yard-viz-bevy", "shunting_location"]
+members = ["yard-viz-bevy", "shunting_location", "shunting_solution"]
