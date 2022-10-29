@@ -1,11 +1,6 @@
-use std::{
-    collections::HashMap,
-    ops::{Index, IndexMut},
-};
-
-use serde::Deserialize;
-
 use super::shunting_yard::TrackPart;
+use serde::Deserialize;
+use std::{collections::HashMap, ops::Index};
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct LocationCoord {

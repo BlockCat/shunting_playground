@@ -42,6 +42,13 @@ impl ShuntingYard {
         let yaml = read_yard(reader).expect("Could not read yard");
         Self::from(yaml)
     }
+
+    pub fn track_parts(&self) -> impl Iterator<Item = &TrackPart> {
+        return self
+            .graph
+            .node_weights()
+            .map(|x| -> &TrackPart { &x.track_part });
+    }
 }
 
 impl Index<FacilityId> for ShuntingYard {

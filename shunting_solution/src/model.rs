@@ -1,7 +1,10 @@
-use std::io::Read;
-
-use easy_error::{Error, ErrorExt, ResultExt};
+use daggy::Dag;
+use easy_error::{Error, ResultExt};
+use petgraph::dot::Dot;
 use serde::{de, Deserialize};
+use std::{collections::HashMap, io::Read};
+
+use crate::Solution;
 
 pub fn read_pos_json<R: Read>(reader: R) -> Result<PosJson, Error> {
     serde_json::from_reader(reader).context("Could not")
@@ -178,9 +181,39 @@ where
     }
 }
 
+impl Into<Solution> for PosJson {
+    fn into(self) -> Solution {
+        let mut graph: Dag<PosAction, f32, u32> =
+            daggy::Dag::with_capacity(self.actions.len(), self.graph.len());
+        let nodes = self
+            .actions
+            .into_iter()
+            .map(|x| (x.id, graph.add_node(x)))
+            .collect::<HashMap<_, _>>();
+
+        for edge in self.graph.into_iter() {
+            let source = nodes[&edge.pre_action_id];
+            let target = nodes[&edge.post_action_id];
+            graph
+                .add_edge(source, target, edge.minimum_time_lag)
+                .expect("Could not add edge");
+        }
+
+        // Walking -> Turning
+        //
+
+        println!("{:?}", Dot::with_config(&graph, &[]));
+
+        // Solution { graph }
+        unimplemented!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
+
+    use crate::Solution;
 
     use super::PosJson;
 
@@ -189,5 +222,15 @@ mod tests {
         let reader = Cursor::new(include_str!("../../data/pos.json"));
 
         let pos: PosJson = super::read_pos_json(reader).expect("Could not parse");
+
+        for movement in pos.actions.iter().filter_map(|x| x.movement.as_ref()) {
+            let path = &movement.path;
+
+            for a in path.windows(2).filter(|x| x[0] == x[1]) {
+                println!("double? turn {:?}", a);
+            }
+        }
+
+        let solution: Solution = pos.into();
     }
 }

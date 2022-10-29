@@ -21,7 +21,7 @@ fn main() {
                 _ => unreachable!(),
             }
         },
-        |f| 1.0,
+        |_| 1.0,
     );
 
     if let Some((weight, path)) = l {

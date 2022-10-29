@@ -30,7 +30,7 @@ fn init_shunting_yard(mut commands: Commands) {
     let location = Cursor::new(include_str!("../../data/location.json"));
     let yard = ShuntingYard::read(location);
 
-    for part in yard.track_parts.iter() {
+    for part in yard.track_parts() {
         let points = &locations[part]
             .iter()
             .map(|x| Vec2::new(x.x * SCALE, x.y * SCALE))

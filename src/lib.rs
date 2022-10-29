@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 // pub mod solution;
+mod mcts;
 pub mod train;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -25,8 +26,5 @@ impl Deref for RailSwitchId {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct ServiceType(String);
-
-

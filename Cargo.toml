@@ -11,5 +11,7 @@ petgraph = {version = "0.6", features = ["serde-1"]}
 shunting_location = {path = "./shunting_location"}
 shunting_solution = {path = "./shunting_solution"}
 
+mcts = { path = "./mcts" }
+
 [workspace]
 members = ["yard-viz-bevy", "shunting_location", "shunting_solution"]
