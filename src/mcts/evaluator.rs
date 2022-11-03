@@ -8,9 +8,9 @@ impl Evaluator<ShuntingMCTS> for SolutionEvaluator {
 
     fn evaluate_new_state(
         &self,
-        state: &<ShuntingMCTS as mcts::MCTS>::State,
-        moves: &mcts::MoveList<ShuntingMCTS>,
-        handle: Option<mcts::SearchHandle<ShuntingMCTS>>,
+        _state: &<ShuntingMCTS as mcts::MCTS>::State,
+        _moves: &mcts::MoveList<ShuntingMCTS>,
+        _handle: Option<mcts::SearchHandle<ShuntingMCTS>>,
     ) -> (
         Vec<mcts::MoveEvaluation<ShuntingMCTS>>,
         Self::StateEvaluation,
@@ -20,9 +20,9 @@ impl Evaluator<ShuntingMCTS> for SolutionEvaluator {
 
     fn evaluate_existing_state(
         &self,
-        state: &<ShuntingMCTS as mcts::MCTS>::State,
+        _state: &<ShuntingMCTS as mcts::MCTS>::State,
         existing_evaln: &Self::StateEvaluation,
-        handle: mcts::SearchHandle<ShuntingMCTS>,
+        _handle: mcts::SearchHandle<ShuntingMCTS>,
     ) -> Self::StateEvaluation {
         *existing_evaln
     }
@@ -30,7 +30,7 @@ impl Evaluator<ShuntingMCTS> for SolutionEvaluator {
     fn interpret_evaluation_for_player(
         &self,
         evaluation: &Self::StateEvaluation,
-        player: &mcts::Player<ShuntingMCTS>,
+        _player: &mcts::Player<ShuntingMCTS>,
     ) -> f64 {
         *evaluation
     }

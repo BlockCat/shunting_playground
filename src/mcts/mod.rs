@@ -26,14 +26,14 @@ impl GameState for SolutionWrapper {
     type MoveList = Vec<Self::Move>;
 
     fn current_player(&self) -> Self::Player {
-        ()
+        
     }
 
     fn available_moves(&self) -> Self::MoveList {
         todo!()
     }
 
-    fn make_move(&mut self, mov: &Self::Move) -> Result<(), ()> {
+    fn make_move(&mut self, _mov: &Self::Move) -> Result<(), ()> {
         todo!()
     }
 
