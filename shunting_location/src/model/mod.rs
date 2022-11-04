@@ -15,9 +15,9 @@ mod tests {
     use crate::read_locations;
     use std::io::Cursor;
 
-    const LOCATIONS: &'static str =
+    const LOCATIONS: &str =
         include_str!("../../../data/Kleine_Binckhorst.location.coords.yaml");
-    const LOCATION: &'static str = include_str!("../../../data/location.json");
+    const LOCATION: &str = include_str!("../../../data/location.json");
 
     #[test]
     fn read_locations_test() {

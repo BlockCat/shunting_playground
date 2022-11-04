@@ -8,7 +8,7 @@ use petgraph::{
     stable_graph::{self, EdgeIndex},
     visit::IntoNodeReferences,
 };
-use shunting_location::ShuntingYard;
+use shunting_location::{FacilityId, ShuntingYard, YardGraphIndex};
 use std::io::Read;
 
 pub use train::*;
@@ -66,19 +66,28 @@ impl Solution {
             match &mut node.kind {
                 NodeAction::Arrival { arrival_time } => {}
                 NodeAction::Departure { departure_time } => {}
-                // NodeAction::Movement { start_time ,path, from_side, to_side, parking_side, order } => todo!(),
-                // NodeAction::Task { start_time,kind, location, facilities, arrival_side, arrival_direction, departure_side, train_units } => todo!(),
+                NodeAction::Movement {
+                    destination,
+                    source,
+                } => todo!(),
+                NodeAction::Task {
+                    kind,
+                    location,
+                    facilities,
+                    train_units,
+                    duration,
+                } => todo!(),
                 NodeAction::Split {
-                    start_time,
                     in_train,
                     out_trains,
+                    duration,
                 } => todo!(),
                 NodeAction::Combine {
-                    start_time,
                     in_trains,
                     out_train,
+                    duration,
                 } => todo!(),
-                NodeAction::Turning { start_time, train } => todo!(),
+                NodeAction::Turning { train, duration } => todo!(),
             }
         }
         unimplemented!("Should update times");
@@ -112,9 +121,8 @@ pub type SolutionGraph = daggy::Dag<SolutionNode, EdgeType, SolutionGraphIndex>;
 
 #[derive(Debug, Clone, Hash)]
 pub struct SolutionNode {
-    start_time: ShuntingTime,
-    duration: ShuntingDuration,
     kind: NodeAction,
+    train: Train,
 }
 
 #[derive(Debug, Clone, Hash)]
@@ -125,37 +133,30 @@ pub enum NodeAction {
     Departure {
         departure_time: ShuntingTime,
     },
-    // Movement {
-    //     start_time: ShuntingTime,
-    //     path: Vec<YardGraphIndex>,
-    //     from_side: ?,
-    //     to_side: ?,
-    //     parking_side: ?
-    //     order: usize,
-    // },
-    // Task {
-    //     start_time: ShuntingTime,
-    //     kind: TaskType,
-    //     location: YardGraphIndex,
-    //     facilities: Vec<FacilityId>,
-    //     arrival_side: ?,
-    //     arrival_direction: ?,
-    //     departure_side: ?,
-    //     train_units: Vec<TrainUnitId>
-    // },
+    Movement {
+        source: YardGraphIndex,
+        destination: YardGraphIndex,
+    },
+    Task {
+        kind: String,
+        location: YardGraphIndex,
+        facilities: Vec<FacilityId>,
+        train_units: Vec<TrainUnit>,
+        duration: ShuntingDuration,
+    },
     Split {
-        start_time: ShuntingTime,
         in_train: Train,
         out_trains: [Train; 2],
+        duration: ShuntingDuration,
     },
     Combine {
-        start_time: ShuntingTime,
         in_trains: [Train; 2],
         out_train: Train,
+        duration: ShuntingDuration,
     },
     Turning {
-        start_time: ShuntingTime,
         train: Train,
+        duration: ShuntingDuration,
     },
 }
 

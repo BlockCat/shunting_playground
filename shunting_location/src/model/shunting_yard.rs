@@ -112,7 +112,7 @@ where
         .map_err(|_| {
             de::Error::invalid_value(de::Unexpected::Str(&value), &"String parseable to number")
         })
-        .map(|x| TrackPartYamlId(x))
+        .map(TrackPartYamlId)
 }
 
 fn parse_vec_string<'de, D>(deserializer: D) -> Result<Vec<TrackPartYamlId>, D::Error>
@@ -123,7 +123,7 @@ where
     value
         .iter()
         .map(|value| value.parse::<usize>())
-        .map(|value| value.map(|v| TrackPartYamlId(v)))
+        .map(|value| value.map(TrackPartYamlId))
         .try_collect::<Vec<_>>()
-        .map_err(|e| de::Error::custom(e))
+        .map_err(de::Error::custom)
 }

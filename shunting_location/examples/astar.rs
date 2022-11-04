@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use shunting_location::{ShuntingSwitch, ShuntingYard};
 
-const LOCATION: &'static str = include_str!("../../data/location.json");
+const LOCATION: &str = include_str!("../../data/location.json");
 
 fn main() {
     let yard = ShuntingYard::read(Cursor::new(LOCATION));

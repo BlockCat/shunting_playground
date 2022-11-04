@@ -3,7 +3,7 @@ use std::io::Cursor;
 use petgraph::dot::{Config, Dot};
 use shunting_location::ShuntingYard;
 
-const LOCATION: &'static str = include_str!("../../data/location.json");
+const LOCATION: &str = include_str!("../../data/location.json");
 
 fn main() {    
     let yard = ShuntingYard::read(Cursor::new(LOCATION));
