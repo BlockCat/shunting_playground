@@ -2,8 +2,8 @@ use crate::Solution;
 use shunting_location::ShuntingYard;
 
 pub fn validate_solution(
-    solution: &Solution,
-    yard: &ShuntingYard,
+    _solution: &Solution,
+    _yard: &ShuntingYard,
 ) -> Result<(), Vec<SolutionConflict>> {
     let conflicts = Vec::new();
 

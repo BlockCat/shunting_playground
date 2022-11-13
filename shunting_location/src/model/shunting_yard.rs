@@ -2,7 +2,7 @@ use serde::{de, Deserialize};
 use std::time::Duration;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct TrackPartYamlId(usize);
+pub struct TrackPartYamlId(pub usize);
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct ShuntingYardYaml {

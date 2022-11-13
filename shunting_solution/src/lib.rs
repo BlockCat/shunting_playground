@@ -1,14 +1,16 @@
 #![feature(iterator_try_collect)]
 #![feature(is_sorted)]
 
+use daggy::Dag;
 use easy_error::Error;
+use model::{PosAction, PosJson, PosTaskType};
 use petgraph::{
     algo,
     graph::NodeReferences,
     stable_graph::{self, EdgeIndex},
     visit::IntoNodeReferences,
 };
-use shunting_location::{FacilityId, ShuntingYard, YardGraphIndex};
+use shunting_location::{FacilityId, ShuntingYard, TrackPartYamlId, YardGraphIndex};
 use std::io::Read;
 
 pub use train::*;
@@ -23,7 +25,7 @@ use time::{ShuntingDuration, ShuntingTime};
 use validate::validate_solution;
 
 pub fn read_solution<R: Read>(reader: R) -> Result<Solution, Error> {
-    let json = model::read_pos_json(reader)?;
+    let _json = model::read_pos_json(reader)?;
 
     unimplemented!()
 }
@@ -38,7 +40,7 @@ pub struct Solution {
 
 impl Solution {
     pub fn read<R: Read>(reader: R) -> Result<Self, Error> {
-        let json = model::read_pos_json(reader)?;
+        let _json = model::read_pos_json(reader)?;
 
         unimplemented!()
     }
@@ -58,42 +60,6 @@ impl Solution {
 }
 
 impl Solution {
-    pub fn update_times(mut self) -> Self {
-        let toposort = algo::toposort(&self.graph, None).unwrap();
-
-        for x in toposort {
-            let node = &mut self.graph[x];
-            match &mut node.kind {
-                NodeAction::Arrival { arrival_time } => {}
-                NodeAction::Departure { departure_time } => {}
-                NodeAction::Movement {
-                    destination,
-                    source,
-                } => todo!(),
-                NodeAction::Task {
-                    kind,
-                    location,
-                    facilities,
-                    train_units,
-                    duration,
-                } => todo!(),
-                NodeAction::Split {
-                    in_train,
-                    out_trains,
-                    duration,
-                } => todo!(),
-                NodeAction::Combine {
-                    in_trains,
-                    out_train,
-                    duration,
-                } => todo!(),
-                NodeAction::Turning { train, duration } => todo!(),
-            }
-        }
-        unimplemented!("Should update times");
-
-        self
-    }
     pub fn reverse_weak(mut self, edge: EdgeIndex) -> Result<Self, ()> {
         debug_assert!(
             self.graph[edge] == EdgeType::Weak,
@@ -111,7 +77,7 @@ impl Solution {
             .add_edge(target, source, EdgeType::Weak)
             .expect("Could not add edge (cycle)");
 
-        Ok(self.update_times())
+        Ok(self)
     }
 }
 
@@ -167,3 +133,51 @@ pub enum EdgeType {
     Strong,
     Weak,
 }
+
+impl Solution {
+    /// From json model to actually solution.
+    pub fn from(model: PosJson, yard: &ShuntingYard) -> Self {
+        let graph = model.json_graph();
+
+        // for (index, node) in graph.node_references() {
+        //     // let node = SolutionNode::from(node, yard);
+        // }
+
+        let toposorted = algo::toposort(&graph, None).expect("Cycle?");
+
+        for index in toposorted {
+            let weight = &graph[index];
+            if let Some(task) = &weight.task {
+                if task.kind == PosTaskType::Predefined(String::from("Arrive")) {
+                    let [side_a, side_b] = yard.yaml_node(TrackPartYamlId(task.location));
+                    
+                }                
+            }
+        }
+
+        unimplemented!()
+    }
+}
+
+// impl SolutionNode {
+//     fn from(action: &PosAction, yard: &ShuntingYard) -> Self {
+//         let train = Train {
+//             units: action
+//                 .train_unit_ids
+//                 .iter()
+//                 .map(|&id| TrainUnit(id))
+//                 .collect(),
+//         };
+//         if let Some(movement) = action.movement {
+//             let source = *movement.path.first().unwrap();
+//             let target = *movement.path.last().unwrap();
+//             Self {
+//                 train,
+//                 kind: NodeAction::Movement {
+//                     source: todo!("Get source from yard location. (direction)"),
+//                     destination: todo!(),
+//                 },
+//             }
+//         }
+//     }
+// }

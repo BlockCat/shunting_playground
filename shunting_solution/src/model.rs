@@ -1,10 +1,8 @@
 use daggy::Dag;
 use easy_error::{Error, ResultExt};
-use petgraph::dot::Dot;
+use petgraph::stable_graph::DefaultIx;
 use serde::{de, Deserialize};
 use std::{collections::HashMap, io::Read};
-
-use crate::Solution;
 
 pub fn read_pos_json<R: Read>(reader: R) -> Result<PosJson, Error> {
     serde_json::from_reader(reader).context("Could not")
@@ -84,7 +82,7 @@ pub struct PosFacility {
     pub index: usize,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub enum PosTaskType {
     Predefined(String),
     Other(String),
@@ -147,9 +145,8 @@ where
     value
         .iter()
         .map(|value| value.parse::<usize>())
-        .map(|value| value)
         .try_collect::<Vec<_>>()
-        .map_err(|e| de::Error::custom(e))
+        .map_err(de::Error::custom)
 }
 
 fn parse_task_type<'de, D>(deserializer: D) -> Result<PosTaskType, D::Error>
@@ -181,8 +178,8 @@ where
     }
 }
 
-impl Into<Solution> for PosJson {
-    fn into(self) -> Solution {
+impl PosJson {
+    pub fn json_graph(&self) -> daggy::Dag<PosAction, f32, DefaultIx> {
         let mut graph: Dag<PosAction, f32, u32> =
             daggy::Dag::with_capacity(self.actions.len(), self.graph.len());
         let nodes = self
@@ -199,23 +196,14 @@ impl Into<Solution> for PosJson {
                 .expect("Could not add edge");
         }
 
-        // Walking -> Turning
-        //
-
-        println!("{:?}", Dot::with_config(&graph, &[]));
-
-        // Solution { graph }
-        unimplemented!()
+        graph
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
-    use crate::Solution;
-
     use super::PosJson;
+    use std::io::Cursor;
 
     #[test]
     fn read_test() {
@@ -231,6 +219,8 @@ mod tests {
             }
         }
 
-        let solution: Solution = pos.into();
+        // println!("{:?}", Dot::with_config(&graph, &[]));
+
+        // let _solution: Solution = pos.into();
     }
 }

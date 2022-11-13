@@ -3,13 +3,13 @@ use self::{
     rail::ShuntingRail,
     switch::ShuntingSwitch,
 };
+pub use crate::model::shunting_yard::TrackPartYamlId;
 use crate::model::{
     read_yard,
-    shunting_yard::{ShuntingYardYaml, TrackPart, TrackPartYamlId},
+    shunting_yard::{ShuntingYardYaml, TrackPart},
 };
-use petgraph::{stable_graph::NodeIndex, Directed, Graph};
+use petgraph::{stable_graph::NodeIndex, visit::IntoNodeReferences, Directed, Graph};
 use std::{collections::HashMap, io::Read, ops::Index};
-
 pub(crate) mod facility;
 pub(crate) mod rail;
 pub(crate) mod switch;
@@ -48,6 +48,17 @@ impl ShuntingYard {
             .graph
             .node_weights()
             .map(|x| -> &TrackPart { &x.track_part });
+    }
+
+    pub fn yaml_node(&self, find: TrackPartYamlId) -> [NodeIndex<u32>; 2] {
+        let grr = self
+            .graph
+            .node_references()
+            .filter(|(index, rail)| rail.track_part.id == find)
+            .map(|x| x.0)
+            .collect::<Vec<_>>();
+
+        [grr[0], grr[1]]
     }
 }
 

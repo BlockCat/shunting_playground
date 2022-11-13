@@ -11,7 +11,7 @@ pub use shunting_yard::{
     facility::{Facility, FacilityId},
     rail::ShuntingRail,
     switch::ShuntingSwitch,
-    ShuntingYard, YardGraph, YardGraphIndex,
+    ShuntingYard, YardGraph, YardGraphIndex, TrackPartYamlId
 };
 
 pub(crate) mod model;
