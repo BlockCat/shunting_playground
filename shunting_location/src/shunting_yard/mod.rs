@@ -8,13 +8,34 @@ use crate::model::{
     read_yard,
     shunting_yard::{ShuntingYardYaml, TrackPart},
 };
-use petgraph::{stable_graph::NodeIndex, visit::IntoNodeReferences, Directed, Graph};
+use petgraph::{
+    stable_graph::{IndexType, NodeIndex},
+    visit::IntoNodeReferences,
+    Directed, Graph,
+};
 use std::{collections::HashMap, io::Read, ops::Index};
 pub(crate) mod facility;
 pub(crate) mod rail;
 pub(crate) mod switch;
 
-pub type YardGraphIndex = u32;
+#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Clone, Copy)]
+pub struct YardGraphIndex(pub u32);
+
+unsafe impl IndexType for YardGraphIndex {
+    fn new(x: usize) -> Self {
+        Self(x as u32)
+    }
+
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+
+    fn max() -> Self {
+        Self(std::u32::MAX)
+    }
+}
+
+pub type YardNodeIndex = NodeIndex<YardGraphIndex>;
 pub type YardGraph = Graph<ShuntingRail, ShuntingSwitch, Directed, YardGraphIndex>;
 
 type IntermediateGraph<'a> =
@@ -50,15 +71,25 @@ impl ShuntingYard {
             .map(|x| -> &TrackPart { &x.track_part });
     }
 
-    pub fn yaml_node(&self, find: TrackPartYamlId) -> [NodeIndex<u32>; 2] {
+    pub fn yaml_node(&self, find: TrackPartYamlId) -> [YardNodeIndex; 2] {
         let grr = self
             .graph
             .node_references()
-            .filter(|(index, rail)| rail.track_part.id == find)
+            .filter(|(_, rail)| rail.track_part.id == find)
             .map(|x| x.0)
             .collect::<Vec<_>>();
 
         [grr[0], grr[1]]
+    }
+
+    pub fn yaml_facility(&self, find: usize) -> &Facility {
+        self.facilities
+            .iter()
+            .find(|x| {
+                dbg!(&x);
+                dbg!(x.id.0) == dbg!(find as u8)
+            })
+            .unwrap()
     }
 }
 
@@ -132,14 +163,14 @@ fn build_intermediate_graph(
     yard: &ShuntingYardYaml,
 ) -> (
     IntermediateGraph,
-    HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
+    HashMap<TrackPartYamlId, (YardNodeIndex, YardNodeIndex)>,
 ) {
     let trackpart_map = yard
         .track_parts
         .iter()
         .map(|x| (x.id, x))
         .collect::<HashMap<_, _>>();
-    let mut graph: IntermediateGraph = IntermediateGraph::new();
+    let mut graph: IntermediateGraph = IntermediateGraph::default();
     let nodes = yard
         .track_parts
         .iter()
@@ -187,10 +218,10 @@ fn build_intermediate_graph(
 fn add_connection(
     trackpart_map: &HashMap<TrackPartYamlId, &TrackPart>,
     other_id: &TrackPartYamlId,
-    nodes: &HashMap<TrackPartYamlId, (NodeIndex, NodeIndex)>,
+    nodes: &HashMap<TrackPartYamlId, (YardNodeIndex, YardNodeIndex)>,
     part: &TrackPart,
     graph: &mut IntermediateGraph,
-    node_index: &NodeIndex,
+    node_index: &YardNodeIndex,
 ) {
     let other_part = trackpart_map[other_id];
     let other_nodes = nodes[other_id];

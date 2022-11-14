@@ -2,6 +2,7 @@
 pub struct FacilityId(pub(crate) u8);
 
 
+#[derive(Debug)]
 pub struct Facility {
     pub id: FacilityId,
     pub name: String,

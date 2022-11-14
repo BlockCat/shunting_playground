@@ -202,6 +202,10 @@ impl PosJson {
 
 #[cfg(test)]
 mod tests {
+    use shunting_location::ShuntingYard;
+
+    use crate::Solution;
+
     use super::PosJson;
     use std::io::Cursor;
 
@@ -209,6 +213,9 @@ mod tests {
     fn read_test() {
         let reader = Cursor::new(include_str!("../../data/pos.json"));
 
+        let location = Cursor::new(include_str!("../../data/location.json"));
+        let yard = ShuntingYard::read(location);
+    
         let pos: PosJson = super::read_pos_json(reader).expect("Could not parse");
 
         for movement in pos.actions.iter().filter_map(|x| x.movement.as_ref()) {
@@ -218,6 +225,8 @@ mod tests {
                 println!("double? turn {:?}", a);
             }
         }
+
+        let sol = Solution::from(pos, &yard);
 
         // println!("{:?}", Dot::with_config(&graph, &[]));
 
