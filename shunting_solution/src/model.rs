@@ -179,7 +179,7 @@ where
 }
 
 impl PosJson {
-    pub fn json_graph(&self) -> daggy::Dag<PosAction, f32, DefaultIx> {
+    pub fn json_graph(self) -> daggy::Dag<PosAction, f32, DefaultIx> {
         let mut graph: Dag<PosAction, f32, u32> =
             daggy::Dag::with_capacity(self.actions.len(), self.graph.len());
         let nodes = self
