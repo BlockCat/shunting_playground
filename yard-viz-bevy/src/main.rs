@@ -1,16 +1,38 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::Instant};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_prototype_lyon::prelude::*;
 use camera_plugin::CameraPlugin;
+use dipstick::{Input, *};
 use rail_view::RailViewPlugin;
 use std::time::Duration;
+
 mod camera_plugin;
 mod rail_view;
 mod yard_plugin;
 
 fn main() {
+    let stats_connection = Statsd::send_to("localhost:8125").map(|x| {
+        let stat = x.named("bevy_yard_viz");
+        stat.prefix_prepend("name");
+        stat.metrics()
+    });
+
+    if let Ok(stat_connection) = stats_connection {
+        let name = format!("bevy_viz");
+        Proxy::default().named(name);
+        dipstick::Proxy::default_target(stat_connection);
+    } else {
+        panic!("Not connected");
+    }
+
+    // dipstick::Proxy::default_target(
+    //     Stream::write_to_stdout().metrics(), // Graphite::send_to("localhost:2003")
+    //                                          //     .expect("Could not connect")
+    //                                          //     .named("My_app_how")
+    //                                          //     .metrics(),
+    // );
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(yard_plugin::YardDrawingPlugin)

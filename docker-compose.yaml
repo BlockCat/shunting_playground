@@ -1,0 +1,31 @@
+# https://github.com/graphite-project/docker-graphite-statsd
+# https://crates.io/crates/dipstick
+version: '3'
+services:
+  graphite:
+    image: graphiteapp/graphite-statsd:latest    
+    ports:
+    - 80:80
+    - 2003-2004:2003-2004
+    - 8125:8125
+    - 8126:8126
+    volumes:
+    - ./graphite/storage:/opt/graphite/storage
+    environment:
+    - COLLECTD=1
+    - GRAPHITE_DEBUG=1
+    - REDIS_TAGDB=1
+    - BRUBECK=1
+#    - GOCARBON=1
+#    depends_on:
+#      - db
+
+  grafana:
+    image: grafana/grafana:6.4.3
+    ports:
+    - 3000:3000
+    volumes:
+    - ./grafana.json:/usr/share/grafana/public/dashboards/home.json:ro
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

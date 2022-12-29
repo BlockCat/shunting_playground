@@ -2,6 +2,7 @@
 #![feature(is_sorted)]
 
 use daggy::{Dag, NodeIndex};
+use dipstick::*;
 use easy_error::Error;
 use model::{PosAction, PosJson, PosTaskType};
 use petgraph::{
@@ -12,6 +13,8 @@ use petgraph::{
 };
 use shunting_location::{FacilityId, ShuntingYard, TrackPartYamlId, YardGraphIndex};
 use std::{collections::VecDeque, io::Read};
+use time::{ShuntingDuration, ShuntingTime};
+use validate::validate_solution;
 
 pub use train::*;
 
@@ -21,10 +24,13 @@ pub mod time;
 mod train;
 mod validate;
 
-use time::{ShuntingDuration, ShuntingTime};
-use validate::validate_solution;
+metrics! {
+    SHUNTING_SOLUTION: Proxy = "shunting_solution" => {
 
-pub fn read_solution<R: Read>(reader: R) -> Result<Solution, Error> {
+    }
+}
+
+pub fn read_solution<R: Read>(reader: R) -> Result<Solution, Error> {    
     let _json = model::read_pos_json(reader)?;
 
     unimplemented!()
@@ -53,7 +59,9 @@ impl Solution {
     }
 
     pub fn validate(&self, yard: &ShuntingYard) -> Result<(), Vec<validate::SolutionConflict>> {
-        validate_solution(self, yard)
+        SHUNTING_SOLUTION
+            .timer("validation")
+            .time(|| validate_solution(self, yard))
     }
 }
 
